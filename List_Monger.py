@@ -8,8 +8,10 @@ import tkColorChooser
 import re
 from collections import OrderedDict #dup removal
 from FieldRadioDialog import *
+from SetSelectorDialog import *
+
 root = Tk()
-root.title("Ryan Burnside's List Monger")
+root.title("List Monger")
 menubar = Menu(root)
 root.config(menu = menubar)
 
@@ -36,9 +38,13 @@ class Program:
         self.pages_list = {} # Stores page widgets's ScrolledText by name
         
     def add_new_page(self, title = ""):
+        # validate in keyword
+        while title in self.pages_list:
+            title += "+"
+
         tab_n = title
         if title == "":
-             tab_n = "New " + str(len(self.notebook.pagenames()))
+             tab_n = "List " + str(len(self.notebook.pagenames()))
         self.notebook.add(tab_n)
         self.pages_list[tab_n] = Pmw.ScrolledText(self.notebook.page(tab_n),
                                                   text_insertbackground = 
@@ -367,6 +373,58 @@ def strip_suffix():
                         final_list.append(mod_list[i])
         a.pages_list[current].settext("\n".join(final_list))
 
+def find_intersection():
+    global a
+    temp = ask_compare("List 1", "List 2", a.pages_list.keys())
+    if temp[0] == "":
+        return
+    else:
+        set_a = set(a.pages_list[temp[0]].get().split('\n'))
+        set_b = set(a.pages_list[temp[1]].get().split('\n'))
+        a.add_new_page("(" + temp[0] + " Intrsct " + temp[1] + ")")
+        current = a.notebook.getcurselection()
+        a.pages_list[current].settext("\n".join(set_a.intersection(set_b)))
+        trim_whitespace()
+
+def find_symmetric_difference():
+    global a
+    temp = ask_compare("List 1", "List 2", a.pages_list.keys())
+    if temp[0] == "":
+        return
+    else:
+        set_a = set(a.pages_list[temp[0]].get().split('\n'))
+        set_b = set(a.pages_list[temp[1]].get().split('\n'))
+        a.add_new_page("(" + temp[0] + " Sdif " + temp[1] + ")")
+        current = a.notebook.getcurselection()
+        a.pages_list[current].settext("\n".join(set_a.symmetric_difference(set_b)))
+        trim_whitespace()
+
+def find_compliment():
+    global a
+    temp = ask_compare("List 1", "List 2", a.pages_list.keys())
+    if temp[0] == "":
+        return
+    else:
+        set_a = set(a.pages_list[temp[0]].get().split('\n'))
+        set_b = set(a.pages_list[temp[1]].get().split('\n'))
+        a.add_new_page("(" + temp[0] + " Cmplmnt " + temp[1] + ")")
+        current = a.notebook.getcurselection()
+        a.pages_list[current].settext("\n".join(set_a.difference(set_b)))
+        trim_whitespace()
+
+def find_union():
+    global a
+    temp = ask_compare("List 1", "List 2", a.pages_list.keys())
+    if temp[0] == "":
+        return
+    else:
+        set_a = set(a.pages_list[temp[0]].get().split('\n'))
+        set_b = set(a.pages_list[temp[1]].get().split('\n'))
+        a.add_new_page("(" + temp[0] + " Unin" + temp[1] + ")")
+        current = a.notebook.getcurselection()
+        a.pages_list[current].settext("\n".join(set_a.union(set_b)))
+        trim_whitespace()
+
 
 file_menu.add_command(label = "New Tab", command = add_a_tab)
 file_menu.add_command(label = "Destroy Selected Tab", command = del_a_tab)
@@ -411,10 +469,14 @@ operations_menu.add_command(label = "Slice Rectangle",
 operations_menu.add_command(label = "Keep Rectangle", 
                             command = warn_not_implimented)
 
-compare_menu.add_command(label = "Find Common", 
-                            command = warn_not_implimented)
-compare_menu.add_command(label = "Find Differences", 
-                            command = warn_not_implimented)
+compare_menu.add_command(label = "Find Intersection", 
+                            command = find_intersection)
+compare_menu.add_command(label = "Find Symmetric Difference", 
+                            command = find_symmetric_difference)
+compare_menu.add_command(label = "Find Compliment", 
+                            command = find_compliment)
+compare_menu.add_command(label = "Find Union", 
+                            command = find_union)
 
 menubar.add_cascade(label = "File", menu = file_menu)
 menubar.add_cascade(label = "Operations", menu = operations_menu)
