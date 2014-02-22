@@ -15,7 +15,7 @@ class FieldRadioDialog:
     def ask(self):
         self.top = Toplevel()
         self.top.transient()
-
+        self.top.geometry('300x128+320+120')
         self.label = Label(self.top, text = self.label_text).pack(side = TOP)
         self.entry = Entry(self.top, textvariable = self.text_value)
         self.entry.pack(side = TOP, fill = X)

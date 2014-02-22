@@ -4,14 +4,13 @@ import tkFileDialog
 import tkMessageBox
 import tkSimpleDialog
 import tkColorChooser
-
 import re
 from collections import OrderedDict #dup removal
 from FieldRadioDialog import *
 from SetSelectorDialog import *
 
 root = Tk()
-root.title("List Monger")
+root.title("List Monger v0.75")
 menubar = Menu(root)
 root.config(menu = menubar)
 
@@ -77,6 +76,7 @@ a.add_new_page()
 file_menu = Menu(menubar, tearoff = 1)
 operations_menu = Menu(menubar, tearoff = 1)
 compare_menu = Menu(menubar, tearoff = 1)
+help_menu = Menu(menubar, tearoff = 1)
 
 # Functions
 def add_a_tab(title = ""):
@@ -183,6 +183,24 @@ def trim_whitespace():
         if i != "":
             final_list.append(i.strip())
     a.pages_list[current].settext("\n".join(final_list))
+
+def natural_sort(l): 
+    """ Sort the given iterable in the way that humans expect-Mark Byers"""
+    convert = lambda text: int(text) if text.isdigit() else text 
+    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    return sorted(l, key = alphanum_key)
+
+def natural_sort_lines():
+    global a
+    current = a.notebook.getcurselection()
+    mod_list = a.pages_list[current].get().split('\n')
+    final_list = []
+    mod_list = natural_sort(mod_list)
+    for i in mod_list:
+        if i != "":
+            final_list.append(i)
+    a.pages_list[current].settext("\n".join(final_list))
+
 
 def sort_lines():
     global a
@@ -381,7 +399,7 @@ def find_intersection():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " Intrsct " + temp[1] + ")")
+        a.add_new_page("(" + temp[0] + " I " + temp[1] + ")")
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.intersection(set_b)))
         trim_whitespace()
@@ -394,7 +412,7 @@ def find_symmetric_difference():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " Sdif " + temp[1] + ")")
+        a.add_new_page("(" + temp[0] + " S " + temp[1] + ")")
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.symmetric_difference(set_b)))
         trim_whitespace()
@@ -407,7 +425,7 @@ def find_compliment():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " Cmplmnt " + temp[1] + ")")
+        a.add_new_page("(" + temp[0] + " C " + temp[1] + ")")
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.difference(set_b)))
         trim_whitespace()
@@ -420,14 +438,14 @@ def find_union():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " Unin" + temp[1] + ")")
+        a.add_new_page("(" + temp[0] + " U " + temp[1] + ")")
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.union(set_b)))
         trim_whitespace()
 
 
-file_menu.add_command(label = "New Tab", command = add_a_tab)
-file_menu.add_command(label = "Destroy Selected Tab", command = del_a_tab)
+file_menu.add_command(label = "New List", command = add_a_tab)
+file_menu.add_command(label = "Destroy Current List", command = del_a_tab)
 file_menu.add_separator()
 file_menu.add_command(label = "Open File", command = open_file)
 file_menu.add_command(label = "Insert File", command = insert_file)
@@ -444,7 +462,9 @@ operations_menu.add_command(label = "Line to List", command = line_to_list)
 operations_menu.add_separator()
 operations_menu.add_command(label = "Trim Whitespace", 
                             command = trim_whitespace)
-operations_menu.add_command(label = "Sort", command = sort_lines)
+operations_menu.add_command(label = "Natural Sort", 
+                            command = natural_sort_lines)
+operations_menu.add_command(label = "ASCII Sort", command = sort_lines)
 operations_menu.add_command(label = "Reverse", command = reverse_lines)
 operations_menu.add_separator()
 operations_menu.add_command(label = "Remove Duplicates",
@@ -478,8 +498,13 @@ compare_menu.add_command(label = "Find Compliment",
 compare_menu.add_command(label = "Find Union", 
                             command = find_union)
 
+help_menu.add_command(label = "About")
+
+help_menu.add_command(label = "Concepts")
+
 menubar.add_cascade(label = "File", menu = file_menu)
 menubar.add_cascade(label = "Operations", menu = operations_menu)
 menubar.add_cascade(label = "Compare", menu = compare_menu)
+menubar.add_cascade(label = "Help", menu = help_menu)
 
 root.mainloop()
