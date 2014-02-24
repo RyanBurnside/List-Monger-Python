@@ -5,10 +5,11 @@ import tkMessageBox
 import tkSimpleDialog
 import tkColorChooser
 import re
+
 from collections import OrderedDict #dup removal
 from FieldRadioDialog import *
 from SetSelectorDialog import *
-
+from TwoFieldDialog import *
 root = Tk()
 root.title("List Monger v0.75")
 menubar = Menu(root)
@@ -21,6 +22,8 @@ TEXT_FOREGROUND = "Gray20"
 TEXT_HIGHLIGHTCOLOR = "White" 
 TEXT_SELECTBACKGROUND = "DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
+
+# TODO make regex searching save for bad regex
 
 class Program:
     def __init__(self, master):
@@ -77,6 +80,7 @@ file_menu = Menu(menubar, tearoff = 1)
 operations_menu = Menu(menubar, tearoff = 1)
 compare_menu = Menu(menubar, tearoff = 1)
 help_menu = Menu(menubar, tearoff = 1)
+
 
 # Functions
 def add_a_tab(title = ""):
@@ -337,7 +341,9 @@ def strip_prefix():
         current = a.notebook.getcurselection()
         mod_list = a.pages_list[current].get().split('\n')
         final_list = []
-        compiled_regex = re.compile(search)
+        compiled_regex = ""
+        if use_regex != 0:
+            compiled_regex = re.compile(search)
         for i in xrange(len(mod_list)):
             if mod_list[i] != "\n" and mod_list[i] != "":
                 if use_regex == 0: # Normal Search
@@ -367,7 +373,9 @@ def strip_suffix():
         current = a.notebook.getcurselection()
         mod_list = a.pages_list[current].get().split('\n')
         final_list = []
-        compiled_regex = re.compile(search)
+        compiled_regex = ""
+        if use_regex != 0:
+            compiled_regex = re.compile(search)
         for i in xrange(len(mod_list)):
             if mod_list[i] != "\n" and mod_list[i] != "":
                 if use_regex == 0: # Normal Search
@@ -390,6 +398,31 @@ def strip_suffix():
                     else:
                         final_list.append(mod_list[i])
         a.pages_list[current].settext("\n".join(final_list))
+
+def slice_lines():
+    global a
+    collected = ask_two_values("First character position\n(blank and 0 are first index) ", 
+                               "First ignored position \n(blank is end of line)", 
+                               "", "")
+    if collected:
+        try: 
+            collected = (int(collected[0]), collected[1])
+        except ValueError:
+            collected = (None, collected[1])
+
+        try: 
+            collected = (collected[0], int(collected[1]))
+        except ValueError:
+            collected = (collected[0], None)
+
+        current = a.notebook.getcurselection()
+        mod_list = a.pages_list[current].get().split('\n')
+        final_list = []
+        for i in mod_list:
+            if i != "":
+                final_list.append(i[collected[0]:collected[1]])
+        a.pages_list[current].settext("\n".join(final_list))    
+
 
 def find_intersection():
     global a
@@ -484,10 +517,8 @@ operations_menu.add_command(label = "Add Suffix", command = suffix_lines)
 operations_menu.add_command(label = "Remove Prefix", command = strip_prefix)
 operations_menu.add_command(label = "Remove Suffix", command = strip_suffix)
 operations_menu.add_separator()
-operations_menu.add_command(label = "Slice Rectangle", 
-                            command = warn_not_implimented)
-operations_menu.add_command(label = "Keep Rectangle", 
-                            command = warn_not_implimented)
+operations_menu.add_command(label = "Keep Slice", 
+                            command = slice_lines)
 
 compare_menu.add_command(label = "Find Intersection", 
                             command = find_intersection)
