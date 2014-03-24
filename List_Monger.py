@@ -10,8 +10,10 @@ from collections import OrderedDict #dup removal
 from FieldRadioDialog import *
 from SetSelectorDialog import *
 from TwoFieldDialog import *
+from SearchDialog import *
+
 root = Tk()
-root.title("List Monger v0.75")
+root.title("List Monger v0.79")
 menubar = Menu(root)
 root.config(menu = menubar)
 
@@ -22,8 +24,6 @@ TEXT_FOREGROUND = "Gray20"
 TEXT_HIGHLIGHTCOLOR = "White" 
 TEXT_SELECTBACKGROUND = "DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
-
-# TODO make regex searching save for bad regex
 
 class Program:
     def __init__(self, master):
@@ -137,8 +137,16 @@ def end_program():
 
 def find():
     global a
+    # TODO Advanced search, this moves forward from cursor only
+    result = ask_with_option("Search Forward: ", "Use Regex")
     current = a.notebook.getcurselection()
-    
+    text_box = a.pages_list[current]
+    index = text_box.search(result[0], INSERT, "end", regexp = (result[1] == 1))
+    print index
+    if index != "":
+        text_box.mark_set("insert", index)
+        text_box.see(index)
+
 def count_lines():
     global a
     current = a.notebook.getcurselection()
@@ -336,6 +344,13 @@ def strip_prefix():
     result = ask_with_option("Enter term to match: ", "Use Regex")
     search = result[0]
     use_regex = result[1]
+    # Try a compilation to ensure the regex is valid
+    if use_regex != 0:
+        try:
+            compiled_regex = re.compile(search)
+        except:
+            return
+
     if search != "":
         global a
         current = a.notebook.getcurselection()
@@ -368,6 +383,13 @@ def strip_suffix():
     result = ask_with_option("Enter term to match: ", "Use Regex")
     search = result[0]
     use_regex = result[1]
+    # Try a compilation to ensure the regex is valid
+    if use_regex != 0:
+        try:
+            compiled_regex = re.compile(search)
+        except:
+            return
+
     if search != "":
         global a
         current = a.notebook.getcurselection()
@@ -485,7 +507,7 @@ file_menu.add_command(label = "Insert File", command = insert_file)
 file_menu.add_command(label = "Export File", command = save_file)
 file_menu.add_command(label = "Quit", command = end_program)
 operations_menu.add_command(label = "Find", 
-                            command = warn_not_implimented)
+                            command = find)
 operations_menu.add_command(label = "Replace", 
                             command = warn_not_implimented)
 operations_menu.add_command(label = "Count List", command = count_lines)
