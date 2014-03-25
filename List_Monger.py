@@ -13,9 +13,9 @@ from TwoFieldDialog import *
 from SearchDialog import *
 
 # Some config globals
-TEXT_INSERTBACKGROUND = "Gray20"
+TEXT_INSERTBACKGROUND = "Gray10"
 TEXT_BACKGROUND = "Lavender"#"Ivory"
-TEXT_FOREGROUND = "Gray20"
+TEXT_FOREGROUND = "Gray10"
 TEXT_HIGHLIGHTCOLOR = "White" 
 TEXT_SELECTBACKGROUND = "Steel Blue"#"DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
