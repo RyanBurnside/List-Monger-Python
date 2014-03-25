@@ -12,18 +12,22 @@ from SetSelectorDialog import *
 from TwoFieldDialog import *
 from SearchDialog import *
 
-root = Tk()
-root.title("List Monger v0.79")
-menubar = Menu(root)
-root.config(menu = menubar)
-
 # Some config globals
 TEXT_INSERTBACKGROUND = "Gray20"
-TEXT_BACKGROUND = "Ivory"
+TEXT_BACKGROUND = "Lavender"#"Ivory"
 TEXT_FOREGROUND = "Gray20"
 TEXT_HIGHLIGHTCOLOR = "White" 
-TEXT_SELECTBACKGROUND = "DeepSkyBlue"
+TEXT_SELECTBACKGROUND = "Steel Blue"#"DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
+VERSION = .80
+
+
+root = Tk()
+root.title("List Monger " + str(VERSION))
+menubar = Menu(root, activebackground = TEXT_BACKGROUND)
+root.config(menu = menubar)
+
+
 
 class Program:
     def __init__(self, master):
@@ -38,15 +42,12 @@ class Program:
                             textvar = self.status_text).pack(side = BOTTOM,
                                                              fill = X)
         self.pages_list = {} # Stores page widgets's ScrolledText by name
-        
-    def add_new_page(self, title = ""):
+        self.next_tab_number = 0
+    def add_new_page(self):
         # validate in keyword
-        while title in self.pages_list:
-            title += "+"
+        self.next_tab_number += 1 
+        tab_n = "List " + str(self.next_tab_number)
 
-        tab_n = title
-        if title == "":
-             tab_n = "List " + str(len(self.notebook.pagenames()))
         self.notebook.add(tab_n)
         self.pages_list[tab_n] = Pmw.ScrolledText(self.notebook.page(tab_n),
                                                   text_insertbackground = 
@@ -71,23 +72,25 @@ class Program:
         # This should ALWAYS be used to remove a tab, it clears the list too
         self.notebook.delete(tab_name)
         del self.pages_list[tab_name]
+        for title in self.pages_list:
+            print title
 
 # Make our program instance
 a = Program(root)
 a.add_new_page()
 
-file_menu = Menu(menubar, tearoff = 1)
-operations_menu = Menu(menubar, tearoff = 1)
-compare_menu = Menu(menubar, tearoff = 1)
-help_menu = Menu(menubar, tearoff = 1)
+file_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
+operations_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
+compare_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
+help_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
 
 
 # Functions
-def add_a_tab(title = ""):
+def add_a_tab():
     global a
-    a.add_new_page(title)
+    a.add_new_page()
 
-def del_a_tab(title = ""):
+def del_a_tab():
     global a        
     current = a.notebook.getcurselection()
     a.delete_page(current)
@@ -99,7 +102,7 @@ def open_file():
     if file != "":
         global a
         f = open(file)
-        a.add_new_page(file.replace("_","?"))
+        a.add_new_page()
         current = a.notebook.getcurselection()
         a.pages_list[current].settext(f.read())
 
@@ -130,6 +133,11 @@ def save_file():
 
 def warn_not_implimented():
     tkMessageBox.showinfo("Warning", "This functionality is not implimented")
+
+def about():
+    tkMessageBox.showinfo("Warning", "Ryan Burnside's List Monger version " +
+                          str(VERSION) +
+                          "\nReleased under GPL version 4")
 
 def end_program():
     global root
@@ -551,7 +559,8 @@ compare_menu.add_command(label = "Find Compliment",
 compare_menu.add_command(label = "Find Union", 
                             command = find_union)
 
-help_menu.add_command(label = "About")
+help_menu.add_command(label = "About",
+                      command = about)
 
 help_menu.add_command(label = "Concepts")
 
