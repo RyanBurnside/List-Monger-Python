@@ -19,15 +19,12 @@ TEXT_FOREGROUND = "Gray10"
 TEXT_HIGHLIGHTCOLOR = "White" 
 TEXT_SELECTBACKGROUND = "Steel Blue"#"DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
-VERSION = .80
-
+VERSION = .81
 
 root = Tk()
 root.title("List Monger " + str(VERSION))
 menubar = Menu(root, activebackground = TEXT_BACKGROUND)
 root.config(menu = menubar)
-
-
 
 class Program:
     def __init__(self, master):
@@ -45,7 +42,7 @@ class Program:
         self.next_tab_number = 0
     def add_new_page(self):
         # validate in keyword
-        self.next_tab_number += 1 
+        self.next_tab_number += 1
         tab_n = "List " + str(self.next_tab_number)
 
         self.notebook.add(tab_n)
@@ -79,11 +76,14 @@ class Program:
 a = Program(root)
 a.add_new_page()
 
-file_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
-operations_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
-compare_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
-help_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND)
-
+file_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND,
+                 activeforeground = TEXT_FOREGROUND)
+operations_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND,
+                       activeforeground = TEXT_FOREGROUND)
+compare_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND,
+                    activeforeground = TEXT_FOREGROUND)
+help_menu = Menu(menubar, tearoff = 1, activebackground = TEXT_BACKGROUND,
+                 activeforeground = TEXT_FOREGROUND)
 
 # Functions
 def add_a_tab():
@@ -149,12 +149,15 @@ def find():
     result = ask_with_option("Search Forward: ", "Use Regex")
     current = a.notebook.getcurselection()
     text_box = a.pages_list[current]
-    index = text_box.search(result[0], INSERT, "end", regexp = (result[1] == 1))
-    print index
+    count = StringVar()
+    count.set(0)
+    index = text_box.search(result[0], INSERT, "end", regexp = (result[1] == 1),
+                            count = count)
+    
     if index != "":
         text_box.mark_set("insert", index)
         text_box.see(index)
-
+        
 def count_lines():
     global a
     current = a.notebook.getcurselection()
@@ -220,7 +223,6 @@ def natural_sort_lines():
         if i != "":
             final_list.append(i)
     a.pages_list[current].settext("\n".join(final_list))
-
 
 def sort_lines():
     global a
@@ -313,6 +315,15 @@ def capitalize_lines():
         mod_list[i] = mod_list[i].capitalize()
     a.pages_list[current].settext("\n".join(mod_list).rstrip())
 
+def SQL_lines():
+    global a
+    current = a.notebook.getcurselection()
+    mod_list = a.pages_list[current].get().split('\n')
+    for i in xrange(len(mod_list)):
+        if mod_list[i] != "\n" and mod_list[i] != "":
+            mod_list[i] = "'" + mod_list[i] + "',"
+    a.pages_list[current].settext("\n".join(mod_list).rstrip())
+
 def quote_lines():
     quote = tkSimpleDialog.askstring("", "Enter quote mark: ")
     if quote != "":
@@ -386,7 +397,6 @@ def strip_prefix():
                         final_list.append(mod_list[i])
         a.pages_list[current].settext("\n".join(final_list))
 
-
 def strip_suffix():
     result = ask_with_option("Enter term to match: ", "Use Regex")
     search = result[0]
@@ -453,7 +463,6 @@ def slice_lines():
                 final_list.append(i[collected[0]:collected[1]])
         a.pages_list[current].settext("\n".join(final_list))    
 
-
 def find_intersection():
     global a
     temp = ask_compare("List 1", "List 2", a.pages_list.keys())
@@ -462,7 +471,7 @@ def find_intersection():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " I " + temp[1] + ")")
+        a.add_new_page()
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.intersection(set_b)))
         trim_whitespace()
@@ -475,7 +484,7 @@ def find_symmetric_difference():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " S " + temp[1] + ")")
+        a.add_new_page()
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.symmetric_difference(set_b)))
         trim_whitespace()
@@ -488,7 +497,7 @@ def find_compliment():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " C " + temp[1] + ")")
+        a.add_new_page()
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.difference(set_b)))
         trim_whitespace()
@@ -501,11 +510,10 @@ def find_union():
     else:
         set_a = set(a.pages_list[temp[0]].get().split('\n'))
         set_b = set(a.pages_list[temp[1]].get().split('\n'))
-        a.add_new_page("(" + temp[0] + " U " + temp[1] + ")")
+        a.add_new_page()
         current = a.notebook.getcurselection()
         a.pages_list[current].settext("\n".join(set_a.union(set_b)))
         trim_whitespace()
-
 
 file_menu.add_command(label = "New List", command = add_a_tab)
 file_menu.add_command(label = "Destroy Current List", command = del_a_tab)
@@ -541,6 +549,7 @@ operations_menu.add_command(label = "Uppercase", command = uppercase_lines)
 operations_menu.add_command(label = "Lowercase", command = lowercase_lines)
 operations_menu.add_command(label = "Capitalize", command = capitalize_lines)
 operations_menu.add_separator()
+operations_menu.add_command(label = "SQL String List", command = SQL_lines)
 operations_menu.add_command(label = "Quote", command = quote_lines)
 operations_menu.add_command(label = "Add Prefix", command = prefix_lines)
 operations_menu.add_command(label = "Add Suffix", command = suffix_lines)
