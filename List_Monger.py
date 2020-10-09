@@ -19,7 +19,7 @@ TEXT_FOREGROUND = "Gray10"
 TEXT_HIGHLIGHTCOLOR = "White" 
 TEXT_SELECTBACKGROUND = "Steel Blue"#"DeepSkyBlue"
 TEXT_SELECTFOREGROUND = "White"
-VERSION = .81
+VERSION = .9
 
 root = Tk()
 root.title("List Monger " + str(VERSION))
@@ -143,120 +143,80 @@ def end_program():
     global root
     root.quit()
 
-def find():
+def get_current_tab():
+    #Gets the current tab in the global notebook
     global a
-    # TODO Advanced search, this moves forward from cursor only
+    return a.notebook.getcurselection()
+
+def get_current_tab_text_widget():
+    # Gets the text widget associated with the current tab
+    global a
+    return a.pages_list[get_current_tab()]
+    
+def get_current_tab_text():
+    # Gets the text associated with the current tab in the current notebook
+    return get_current_tab_text_widget().get()
+
+def get_list_from_current_tab():
+    # Gets a list of lines from the current notebook tab
+    return get_current_tab_text().splitlines()
+
+def set_current_tab_text(text):
+    get_current_tab_text_widget().settext(text)
+
+def set_current_tab_list(l):
+    if l:
+        return set_current_tab_text("\n".join(str(n) for n in l))
+
+def find():
     result = ask_with_option("Search Forward: ", "Use Regex")
-    current = a.notebook.getcurselection()
-    text_box = a.pages_list[current]
     count = StringVar()
     count.set(0)
-    index = text_box.search(result[0], INSERT, "end", regexp = (result[1] == 1),
-                            count = count)
+    box = get_current_tab_text_widget()
+    index = box.search(result[0], INSERT, "end", regexp = (result[1] == 1),
+                       count = count)
     
     if index != "":
-        text_box.mark_set("insert", index)
-        text_box.see(index)
+        box.mark_set("insert", index)
+        box.see(index)
         
 def count_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    num_valid_lines = 0
-    for i in mod_list:
-        if i != "":
-            num_valid_lines += 1
-    num_newlines = a.pages_list[current].get()
-    num_newlines = num_newlines.count("\n")
-    message_string = ("There are " + str(num_valid_lines) +
-                      " valid items \n in " + 
-                      str(num_newlines) + 
-                      " total lines.") 
-    tkMessageBox.showinfo(message = message_string)
+    mod_list = get_list_from_current_tab()
+    tkMessageBox.showinfo(message="""There are {} non-blank items. 
+    and {} lines.""".format(sum(0 if i == "" else 1 for i in mod_list),
+                            len(mod_list) - 1))
 
 def list_to_line():
     seperator = tkSimpleDialog.askstring("", "Enter seperator:")
-    if seperator != "":
-        global a
-        current = a.notebook.getcurselection()
-        mod_list = a.pages_list[current].get().split('\n')
-        for i in xrange(len(mod_list)):
-            if mod_list[i] != "\n" and mod_list[i] != "":
-                mod_list[i] = mod_list[i] + seperator
-        a.pages_list[current].settext("".join(mod_list))
+    result = get_current_tab_text().replace("\n", seperator)
+    set_current_tab_text(result)
 
 def line_to_list():
     seperator = tkSimpleDialog.askstring("", "Enter seperator:")
-    if seperator != "":
-        global a
-        current = a.notebook.getcurselection()
-        mod_list = a.pages_list[current].get().split(seperator)
-        new_list = []
-        for i in xrange(len(mod_list)):
-            if mod_list[i] != "\n" and mod_list[i] != "":
-                new_list.append(mod_list[i])
-        a.pages_list[current].settext("\n".join(new_list))
+    result = get_current_tab_text().replace(seperator, "\n")
+    set_current_tab_text(result)
 
 def trim_whitespace():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    final_list = []
-    for i in mod_list:
-        if i != "":
-            final_list.append(i.strip())
-    a.pages_list[current].settext("\n".join(final_list))
+    set_current_tab_list([i.strip() for i in get_list_from_current_tab()])
 
 def natural_sort(l): 
     """ Sort the given iterable in the way that humans expect-Mark Byers"""
     convert = lambda text: int(text) if text.isdigit() else text 
-    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
     return sorted(l, key = alphanum_key)
 
 def natural_sort_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    final_list = []
-    mod_list = natural_sort(mod_list)
-    for i in mod_list:
-        if i != "":
-            final_list.append(i)
-    a.pages_list[current].settext("\n".join(final_list))
+    set_current_tab_list(natural_sort(get_list_from_current_tab()))
 
 def sort_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    final_list = []
-    mod_list.sort()
-    for i in mod_list:
-        if i != "":
-            final_list.append(i)
-    a.pages_list[current].settext("\n".join(final_list))
-
+    set_current_tab_list(sorted(get_list_from_current_tab()))
+    
 def reverse_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    final_list = []
-    for i in mod_list:
-        if i != "":
-            final_list.append(i)
-    final_list.reverse()
-    a.pages_list[current].settext("\n".join(final_list))
+    set_current_tab_list(get_list_from_current_tab()[::-1])
 
 def remove_duplicate_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    mod_list = list(OrderedDict.fromkeys(mod_list))
-    final_list = []
-    for i in mod_list:
-        if i != "":
-            final_list.append(i)
-    a.pages_list[current].settext("\n".join(final_list))
-
+    set_current_tab_list(list(OrderedDict.fromkeys(get_list_from_current_tab())))
+    
 def remove_containing():
     result = ask_with_option("Enter term to match: ", "Use Regex")
     search = result[0]
@@ -296,24 +256,13 @@ def keep_containing():
         a.pages_list[current].settext("\n".join(final_list))
 
 def uppercase_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_string = a.pages_list[current].get().upper()
-    a.pages_list[current].settext(mod_string.rstrip())
+    set_current_tab_list([i.upper() for i in get_list_from_current_tab()])
 
 def lowercase_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_string = a.pages_list[current].get().lower()
-    a.pages_list[current].settext(mod_string.rstrip())
+    set_current_tab_list([i.lower() for i in get_list_from_current_tab()])
 
 def capitalize_lines():
-    global a
-    current = a.notebook.getcurselection()
-    mod_list = a.pages_list[current].get().split('\n')
-    for i in xrange(len(mod_list)):
-        mod_list[i] = mod_list[i].capitalize()
-    a.pages_list[current].settext("\n".join(mod_list).rstrip())
+    set_current_tab_list([i.capitalize() for i in get_list_from_current_tab()])
 
 def SQL_lines():
     global a
